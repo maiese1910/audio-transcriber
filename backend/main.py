@@ -3,9 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import shutil
 import os
-import whisper
-from pydub import AudioSegment
-import math
+from faster_whisper import WhisperModel
 
 app = FastAPI()
 
@@ -24,34 +22,21 @@ app.add_middleware(
 
 # Load Whisper model
 # Options: tiny, base, small, medium, large
-# tiny = fastest (3-5x faster than base), good for Spanish
+# tiny = fastest, good for Spanish
 MODEL_TYPE = "tiny"
 model = None
 
 @app.on_event("startup")
 def load_model():
     global model
-    print(f"Loading Whisper model: {MODEL_TYPE}...")
-    model = whisper.load_model(MODEL_TYPE)
+    print(f"Loading Faster Whisper model: {MODEL_TYPE}...")
+    # Run on CPU with INT8 quantization for speed and low memory usage
+    model = WhisperModel(MODEL_TYPE, device="cpu", compute_type="int8")
     print("Model loaded successfully.")
 
 @app.get("/")
 def read_root():
     return {"message": "Audio Transcriber API is running"}
-
-def split_audio(file_path, segment_length_ms=300000):  # 5 minutes = 300000 ms
-    """Split audio into segments of specified length"""
-    audio = AudioSegment.from_file(file_path)
-    duration_ms = len(audio)
-    segments = []
-    
-    for i in range(0, duration_ms, segment_length_ms):
-        segment = audio[i:i + segment_length_ms]
-        segment_path = f"{file_path}_segment_{i // segment_length_ms}.mp3"
-        segment.export(segment_path, format="mp3")
-        segments.append(segment_path)
-    
-    return segments
 
 @app.post("/transcribe")
 async def transcribe_audio(file: UploadFile = File(...)):
@@ -66,46 +51,33 @@ async def transcribe_audio(file: UploadFile = File(...)):
 
     # Save uploaded file temporarily
     temp_filename = f"temp_{file.filename}"
-    segment_files = []
     
     try:
         with open(temp_filename, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Check file size and split if necessary (> 10MB)
-        file_size_mb = os.path.getsize(temp_filename) / (1024 * 1024)
+        print(f"Transcribing {file.filename}...")
         
-        if file_size_mb > 10:
-            # Split audio into 5-minute segments
-            print(f"File size: {file_size_mb:.2f}MB - Splitting into segments...")
-            segment_files = split_audio(temp_filename)
-            
-            # Transcribe each segment
-            full_transcription = []
-            for idx, segment_path in enumerate(segment_files):
-                print(f"Transcribing segment {idx + 1}/{len(segment_files)}...")
-                result = model.transcribe(
-                    segment_path,
-                    language="es",
-                    verbose=False
-                )
-                full_transcription.append(result["text"])
-            
-            transcription_text = " ".join(full_transcription)
-        else:
-            # Transcribe normally for small files
-            result = model.transcribe(
-                temp_filename,
-                language="es",
-                verbose=False
-            )
-            transcription_text = result["text"]
+        # Transcribe using faster-whisper
+        # It returns a generator of segments, so we iterate to get the full text
+        segments, info = model.transcribe(temp_filename, language="es", beam_size=5)
+        
+        print(f"Detected language '{info.language}' with probability {info.language_probability}")
+
+        full_transcription = []
+        for segment in segments:
+            # print(f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}")
+            full_transcription.append(segment.text)
+        
+        transcription_text = " ".join(full_transcription).strip()
         
         # Return with explicit UTF-8 encoding
         return JSONResponse(
             content={
                 "filename": file.filename,
-                "transcription": transcription_text
+                "transcription": transcription_text,
+                "language": info.language,
+                "duration": info.duration
             },
             media_type="application/json; charset=utf-8"
         )
@@ -115,10 +87,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
     
     finally:
-        # Clean up all temporary files
+        # Clean up temporary file
         if os.path.exists(temp_filename):
             os.remove(temp_filename)
-        for segment_file in segment_files:
-            if os.path.exists(segment_file):
-                os.remove(segment_file)
 

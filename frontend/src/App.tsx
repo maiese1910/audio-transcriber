@@ -24,7 +24,7 @@ function App() {
     try {
       // Use local backend for better performance and no timeouts
       const backendUrl = window.location.hostname === 'localhost'
-        ? 'http://localhost:8000/transcribe'  // Local development
+        ? 'http://localhost:7860/transcribe'  // Local development
         : 'https://mauromaiese1910-audio-transcriber.hf.space/transcribe';  // Production
 
       const response = await fetch(backendUrl, {

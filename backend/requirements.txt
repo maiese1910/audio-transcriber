@@ -1,8 +1,9 @@
 fastapi
 uvicorn[standard]
-openai-whisper
+faster-whisper
 python-multipart
-pydub
-openai-whisper
-torch
+# pydub is no longer strictly needed for splitting if we trust faster-whisper, 
+# but keeping it just in case we need simple audio manipulation later is fine, 
+# though we want to minimize image size. Let's keep it minimal.
+# pydub
 numpy
