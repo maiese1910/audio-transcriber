@@ -25,7 +25,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             >
                 <div className="h-full flex flex-col">
                     <div className="h-16 flex items-center px-6 border-b border-gray-100 dark:border-gray-700">
-                        <img src="/logo.png" alt="Transcriber" className="h-8 w-8 mr-3" />
+                        <div className="h-8 w-8 mr-3 bg-white rounded-lg p-1 flex items-center justify-center">
+                            <img src="/logo.png" alt="Transcriber" className="h-full w-full object-contain" />
+                        </div>
                         <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-blue-600">
                             Transcriber
                         </span>
