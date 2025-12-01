@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { db } from '../firebase';
-import { collection, addDoc, query, orderBy, onSnapshot, Timestamp } from 'firebase/firestore';
+import { collection, addDoc, query, orderBy, onSnapshot, Timestamp, where } from 'firebase/firestore';
 
 export interface TranscriptionItem {
     id: string;
@@ -9,12 +9,22 @@ export interface TranscriptionItem {
     date: Date;
 }
 
-export const useHistory = () => {
+export const useHistory = (userId?: string) => {
     const [history, setHistory] = useState<TranscriptionItem[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const q = query(collection(db, 'transcriptions'), orderBy('createdAt', 'desc'));
+        if (!userId) {
+            setHistory([]);
+            setLoading(false);
+            return;
+        }
+
+        const q = query(
+            collection(db, 'transcriptions'),
+            where('userId', '==', userId),
+            orderBy('createdAt', 'desc')
+        );
 
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const items: TranscriptionItem[] = [];
@@ -32,11 +42,14 @@ export const useHistory = () => {
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [userId]);
 
     const addToHistory = async (filename: string, text: string) => {
+        if (!userId) return;
+
         try {
             await addDoc(collection(db, 'transcriptions'), {
+                userId,
                 filename,
                 text,
                 createdAt: Timestamp.now(),

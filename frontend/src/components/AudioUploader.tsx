@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 
 interface AudioUploaderProps {
   onUpload: (file: File) => void;
@@ -7,27 +7,6 @@ interface AudioUploaderProps {
 
 const AudioUploader: React.FC<AudioUploaderProps> = ({ onUpload, isUploading }) => {
   const [dragActive, setDragActive] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [estimatedTime, setEstimatedTime] = useState(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
-
-  useEffect(() => {
-    if (isUploading) {
-      // Simulate progress
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 95) return prev; // Stop at 95% until actual completion
-          return prev + 1;
-        });
-        setElapsedTime((prev) => prev + 1);
-      }, 1000);
-
-      return () => clearInterval(interval);
-    } else {
-      setProgress(0);
-      setElapsedTime(0);
-    }
-  }, [isUploading]);
 
   const handleDrag = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -44,37 +23,22 @@ const AudioUploader: React.FC<AudioUploaderProps> = ({ onUpload, isUploading }) 
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      // Estimate time: ~1 minute per 3 minutes of audio
-      const fileSizeMB = file.size / (1024 * 1024);
-      const estimatedMinutes = Math.ceil(fileSizeMB / 3);
-      setEstimatedTime(estimatedMinutes * 60);
-      onUpload(file);
+      onUpload(e.dataTransfer.files[0]);
     }
   }, [onUpload]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.preventDefault();
     if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      const fileSizeMB = file.size / (1024 * 1024);
-      const estimatedMinutes = Math.ceil(fileSizeMB / 3);
-      setEstimatedTime(estimatedMinutes * 60);
-      onUpload(file);
+      onUpload(e.target.files[0]);
     }
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
     <div
       className={`relative group cursor-pointer p-12 border-3 border-dashed rounded-2xl transition-all duration-300 ease-in-out transform hover:scale-[1.01] ${dragActive
-          ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]'
-          : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-gray-100'
+        ? 'border-blue-500 bg-blue-50 shadow-lg scale-[1.02]'
+        : 'border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-gray-100'
         }`}
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
@@ -91,35 +55,17 @@ const AudioUploader: React.FC<AudioUploaderProps> = ({ onUpload, isUploading }) 
       <div className="text-center space-y-4">
         {isUploading ? (
           <div className="flex flex-col items-center justify-center py-8 space-y-6">
-            {/* Progress Bar */}
-            <div className="w-full max-w-md">
-              <div className="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Transcribiendo...</span>
-                <span className="font-bold text-indigo-600">{progress}%</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-3 overflow-hidden">
-                <div
-                  className="bg-gradient-to-r from-indigo-600 to-blue-600 h-3 rounded-full transition-all duration-500 ease-out"
-                  style={{ width: `${progress}%` }}
-                ></div>
-              </div>
+            {/* Loading Spinner */}
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
             </div>
 
-            {/* Time Information */}
-            <div className="flex gap-8 text-sm">
-              <div className="text-center">
-                <p className="text-gray-500">Tiempo transcurrido</p>
-                <p className="text-lg font-bold text-gray-700">{formatTime(elapsedTime)}</p>
-              </div>
-              <div className="text-center">
-                <p className="text-gray-500">Tiempo estimado</p>
-                <p className="text-lg font-bold text-indigo-600">{formatTime(estimatedTime)}</p>
-              </div>
+            <div className="space-y-2">
+              <p className="text-xl font-bold text-gray-700">Transcribiendo audio...</p>
+              <p className="text-sm text-gray-500">
+                Esto puede tardar unos momentos dependiendo del tamaño del archivo.
+              </p>
             </div>
-
-            <p className="text-sm text-gray-500">
-              Esto puede tardar unos momentos dependiendo del tamaño del archivo.
-            </p>
           </div>
         ) : (
           <>

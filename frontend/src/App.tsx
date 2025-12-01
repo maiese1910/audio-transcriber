@@ -1,16 +1,32 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import AudioUploader from './components/AudioUploader';
 import TranscriptionViewer from './components/TranscriptionViewer';
 import { Layout } from './components/Layout/Layout';
 import { useHistory } from './hooks/useHistory';
 import { DashboardStats } from './components/Dashboard/Stats';
+import Login from './components/Login';
+import HistoryList from './components/HistoryList';
+import { auth } from './firebase';
+import { onAuthStateChanged, type User, signOut } from 'firebase/auth';
 
 function App() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [transcription, setTranscription] = useState<string | null>(null);
   const [filename, setFilename] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
-  const { addToHistory } = useHistory();
+
+  // Pass userId to useHistory hook
+  const { history, loading: historyLoading, addToHistory } = useHistory(user?.uid);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   const handleUpload = async (file: File) => {
     setIsUploading(true);
@@ -49,18 +65,49 @@ function App() {
     }
   };
 
+  const handleHistorySelect = (text: string, fname: string) => {
+    setTranscription(text);
+    setFilename(fname);
+    // Scroll to top to see the viewer
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleSignOut = () => {
+    signOut(auth);
+    setTranscription(null);
+    setFilename("");
+  };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login />;
+  }
+
   return (
     <Layout>
       <div className="space-y-8">
-        <div className="text-center sm:text-left">
-          <div>
+        <div className="flex justify-between items-center">
+          <div className="text-center sm:text-left">
             <h1 className="text-3xl font-bold text-gray-900">
               Dashboard
             </h1>
             <p className="mt-2 text-gray-600">
-              Manage your recordings and create new transcriptions.
+              Bienvenido, {user.displayName}
             </p>
           </div>
+          <button
+            onClick={handleSignOut}
+            className="text-sm text-gray-500 hover:text-gray-700 underline"
+          >
+            Cerrar Sesión
+          </button>
         </div>
 
         <DashboardStats />
@@ -78,6 +125,14 @@ function App() {
         {transcription && (
           <TranscriptionViewer text={transcription} filename={filename} />
         )}
+
+        <div className="mt-12">
+          <HistoryList
+            history={history}
+            loading={historyLoading}
+            onSelect={handleHistorySelect}
+          />
+        </div>
       </div>
     </Layout>
   );
