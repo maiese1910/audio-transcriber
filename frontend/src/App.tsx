@@ -102,10 +102,10 @@ function App() {
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <div className="text-center sm:text-left">
-            <h1 className="text-3xl font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
               Dashboard
             </h1>
-            <p className="mt-2 text-gray-600">
+            <p className="mt-2 text-gray-600 dark:text-gray-300">
               {user ? `Bienvenido, ${user.displayName}` : 'Transcribe tus audios gratis y rápido'}
             </p>
           </div>
@@ -113,12 +113,12 @@ function App() {
 
         <DashboardStats />
 
-        <div className="bg-white rounded-2xl shadow-sm p-1">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-1 transition-colors duration-200">
           <AudioUploader onUpload={handleUpload} isUploading={isUploading} />
         </div>
 
         {error && (
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
             {error}
           </div>
         )}
@@ -135,8 +135,8 @@ function App() {
               onSelect={handleHistorySelect}
             />
           ) : (
-            <div className="text-center p-8 bg-gray-50 rounded-2xl border border-gray-200">
-              <p className="text-gray-600 mb-4">Inicia sesión para guardar y ver tu historial de transcripciones.</p>
+            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 transition-colors duration-200">
+              <p className="text-gray-600 dark:text-gray-300 mb-4">Inicia sesión para guardar y ver tu historial de transcripciones.</p>
               <button
                 onClick={handleLogin}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
