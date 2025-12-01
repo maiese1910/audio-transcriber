@@ -17,28 +17,28 @@ export const DashboardStats = () => {
                 </div>
             </Card>
 
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transition-colors duration-200">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-gray-500 text-sm font-medium">Hours Saved</p>
-                        <h3 className="text-3xl font-bold text-gray-900 mt-1">4.5</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Hours Saved</p>
+                        <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">4.5</h3>
                     </div>
-                    <div className="p-3 bg-green-50 rounded-lg">
-                        <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-3 bg-green-50 dark:bg-green-900/30 rounded-lg">
+                        <svg className="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </div>
                 </div>
             </Card>
 
-            <Card className="bg-white border-gray-200">
+            <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 transition-colors duration-200">
                 <div className="flex items-center justify-between">
                     <div>
-                        <p className="text-gray-500 text-sm font-medium">Storage Used</p>
-                        <h3 className="text-3xl font-bold text-gray-900 mt-1">128 MB</h3>
+                        <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">Storage Used</p>
+                        <h3 className="text-3xl font-bold text-gray-900 dark:text-white mt-1">128 MB</h3>
                     </div>
-                    <div className="p-3 bg-purple-50 rounded-lg">
-                        <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="p-3 bg-purple-50 dark:bg-purple-900/30 rounded-lg">
+                        <svg className="w-6 h-6 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
                         </svg>
                     </div>
