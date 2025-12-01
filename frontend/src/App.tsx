@@ -4,10 +4,9 @@ import TranscriptionViewer from './components/TranscriptionViewer';
 import { Layout } from './components/Layout/Layout';
 import { useHistory } from './hooks/useHistory';
 import { DashboardStats } from './components/Dashboard/Stats';
-import Login from './components/Login';
 import HistoryList from './components/HistoryList';
 import { auth } from './firebase';
-import { onAuthStateChanged, type User, signOut } from 'firebase/auth';
+import { onAuthStateChanged, type User, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 
 function App() {
   const [user, setUser] = useState<User | null>(null);
@@ -56,8 +55,10 @@ function App() {
       const data = await response.json();
       setTranscription(data.transcription);
 
-      // Save to history
-      await addToHistory(file.name, data.transcription);
+      // Save to history only if logged in
+      if (user) {
+        await addToHistory(file.name, data.transcription);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
@@ -70,6 +71,16 @@ function App() {
     setFilename(fname);
     // Scroll to top to see the viewer
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider();
+      await signInWithPopup(auth, provider);
+    } catch (err) {
+      console.error("Login error:", err);
+      setError("Error al iniciar sesión con Google.");
+    }
   };
 
   const handleSignOut = () => {
@@ -86,12 +97,8 @@ function App() {
     );
   }
 
-  if (!user) {
-    return <Login />;
-  }
-
   return (
-    <Layout>
+    <Layout user={user} onLogin={handleLogin} onLogout={handleSignOut}>
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <div className="text-center sm:text-left">
@@ -99,15 +106,9 @@ function App() {
               Dashboard
             </h1>
             <p className="mt-2 text-gray-600">
-              Bienvenido, {user.displayName}
+              {user ? `Bienvenido, ${user.displayName}` : 'Transcribe tus audios gratis y rápido'}
             </p>
           </div>
-          <button
-            onClick={handleSignOut}
-            className="text-sm text-gray-500 hover:text-gray-700 underline"
-          >
-            Cerrar Sesión
-          </button>
         </div>
 
         <DashboardStats />
@@ -127,11 +128,23 @@ function App() {
         )}
 
         <div className="mt-12">
-          <HistoryList
-            history={history}
-            loading={historyLoading}
-            onSelect={handleHistorySelect}
-          />
+          {user ? (
+            <HistoryList
+              history={history}
+              loading={historyLoading}
+              onSelect={handleHistorySelect}
+            />
+          ) : (
+            <div className="text-center p-8 bg-gray-50 rounded-2xl border border-gray-200">
+              <p className="text-gray-600 mb-4">Inicia sesión para guardar y ver tu historial de transcripciones.</p>
+              <button
+                onClick={handleLogin}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+              >
+                Iniciar Sesión con Google
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </Layout>
