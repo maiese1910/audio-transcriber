@@ -176,23 +176,11 @@ function App() {
         )}
 
         <div className="mt-12">
-          {user ? (
-            <HistoryList
-              history={history}
-              loading={historyLoading}
-              onSelect={handleHistorySelect}
-            />
-          ) : (
-            <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 transition-colors duration-200">
-              <p className="text-gray-600 dark:text-gray-300 mb-4">Inicia sesión para guardar y ver tu historial de transcripciones.</p>
-              <button
-                onClick={handleLogin}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                Iniciar Sesión con Google
-              </button>
-            </div>
-          )}
+          <HistoryList
+            history={history}
+            loading={historyLoading}
+            onSelect={handleHistorySelect}
+          />
         </div>
       </div>
     </Layout>
