@@ -22,8 +22,8 @@ app.add_middleware(
 
 # Load Whisper model
 # Options: tiny, base, small, medium, large
-# tiny = fastest, good for Spanish
-MODEL_TYPE = "tiny"
+# small = better balance for Spanish coherence
+MODEL_TYPE = "small"
 model = None
 
 @app.on_event("startup")
@@ -59,15 +59,29 @@ async def transcribe_audio(file: UploadFile = File(...)):
         print(f"Transcribing {file.filename}...")
         
         # Transcribe using faster-whisper
-        # It returns a generator of segments, so we iterate to get the full text
-        segments, info = model.transcribe(temp_filename, language="es", beam_size=5)
+        # Added initial_prompt for context and vad_filter to reduce hallucinations
+        segments_generator, info = model.transcribe(
+            temp_filename, 
+            language="es", 
+            beam_size=5,
+            initial_prompt="Esta es una transcripción clara, coherente y bien puntuada en español.",
+            vad_filter=True,
+            vad_parameters=dict(min_silence_duration_ms=500)
+        )
         
         print(f"Detected language '{info.language}' with probability {info.language_probability}")
 
         full_transcription = []
-        for segment in segments:
+        segments_list = []
+        
+        for segment in segments_generator:
             # print(f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}")
             full_transcription.append(segment.text)
+            segments_list.append({
+                "start": segment.start,
+                "end": segment.end,
+                "text": segment.text
+            })
         
         transcription_text = " ".join(full_transcription).strip()
         
@@ -77,7 +91,8 @@ async def transcribe_audio(file: UploadFile = File(...)):
                 "filename": file.filename,
                 "transcription": transcription_text,
                 "language": info.language,
-                "duration": info.duration
+                "duration": info.duration,
+                "segments": segments_list
             },
             media_type="application/json; charset=utf-8"
         )

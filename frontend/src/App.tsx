@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Toaster, toast } from 'react-hot-toast';
 import AudioUploader from './components/AudioUploader';
 import TranscriptionViewer from './components/TranscriptionViewer';
 import { Layout } from './components/Layout/Layout';
@@ -13,8 +14,8 @@ function App() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
   const [transcription, setTranscription] = useState<string | null>(null);
+  const [segments, setSegments] = useState<any[]>([]); // Store segments for SRT export
   const [filename, setFilename] = useState<string>("");
-  const [error, setError] = useState<string | null>(null);
 
   // Pass userId to useHistory hook
   const { history, loading: historyLoading, addToHistory } = useHistory(user?.uid);
@@ -29,14 +30,14 @@ function App() {
 
   const handleUpload = async (file: File) => {
     setIsUploading(true);
-    setError(null);
     setTranscription(null);
+    setSegments([]);
     setFilename(file.name);
 
     const formData = new FormData();
     formData.append('file', file);
 
-    try {
+    const uploadPromise = async () => {
       // Use local backend for better performance and no timeouts
       const backendUrl = window.location.hostname === 'localhost'
         ? 'http://localhost:7860/transcribe'  // Local development
@@ -53,33 +54,45 @@ function App() {
       }
 
       const data = await response.json();
-      setTranscription(data.transcription);
+      return data;
+    };
 
-      // Save to history only if logged in
-      if (user) {
-        await addToHistory(file.name, data.transcription);
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An unknown error occurred');
-    } finally {
+    toast.promise(uploadPromise(), {
+      loading: 'Transcribiendo audio... (esto puede tomar unos momentos)',
+      success: (data: any) => {
+        setTranscription(data.transcription);
+        setSegments(data.segments || []); // Store segments
+        if (user) {
+          addToHistory(file.name, data.transcription);
+        }
+        return '¡Transcripción completada con éxito!';
+      },
+      error: (err) => {
+        console.error(err);
+        return `Error: ${err.message}`;
+      },
+    }).finally(() => {
       setIsUploading(false);
-    }
+    });
   };
 
   const handleHistorySelect = (text: string, fname: string) => {
     setTranscription(text);
     setFilename(fname);
+    setSegments([]); // History currently doesn't save segments, so clear them
     // Scroll to top to see the viewer
     window.scrollTo({ top: 0, behavior: 'smooth' });
+    toast.success('Transcripción cargada del historial');
   };
 
   const handleLogin = async () => {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
+      toast.success('Sesión iniciada correctamente');
     } catch (err) {
       console.error("Login error:", err);
-      setError("Error al iniciar sesión con Google.");
+      toast.error("Error al iniciar sesión con Google.");
     }
   };
 
@@ -87,11 +100,12 @@ function App() {
     signOut(auth);
     setTranscription(null);
     setFilename("");
+    toast.success('Sesión cerrada');
   };
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
       </div>
     );
@@ -99,6 +113,24 @@ function App() {
 
   return (
     <Layout user={user} onLogin={handleLogin} onLogout={handleSignOut}>
+      <Toaster position="top-center" toastOptions={{
+        className: 'dark:bg-gray-800 dark:text-white',
+        style: {
+          background: '#333',
+          color: '#fff',
+        },
+        success: {
+          style: {
+            background: '#10B981',
+          },
+        },
+        error: {
+          style: {
+            background: '#EF4444',
+          },
+        },
+      }} />
+
       <div className="space-y-8">
         <div className="flex justify-between items-center">
           <div className="text-center sm:text-left">
@@ -117,14 +149,12 @@ function App() {
           <AudioUploader onUpload={handleUpload} isUploading={isUploading} />
         </div>
 
-        {error && (
-          <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-400">
-            {error}
-          </div>
-        )}
-
         {transcription && (
-          <TranscriptionViewer text={transcription} filename={filename} />
+          <TranscriptionViewer
+            text={transcription}
+            filename={filename}
+            segments={segments}
+          />
         )}
 
         <div className="mt-12">
