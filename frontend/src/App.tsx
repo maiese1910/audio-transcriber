@@ -90,9 +90,10 @@ function App() {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
       toast.success('Sesión iniciada correctamente');
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
-      toast.error("Error al iniciar sesión con Google.");
+      const errorMessage = err.code ? `Error: ${err.code}` : err.message;
+      toast.error(errorMessage || "Error al iniciar sesión con Google.");
     }
   };
 
