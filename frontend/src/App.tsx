@@ -57,23 +57,23 @@ function App() {
       return data;
     };
 
-    toast.promise(uploadPromise(), {
-      loading: 'Transcribiendo audio... (esto puede tomar unos momentos)',
-      success: (data: any) => {
-        setTranscription(data.transcription);
-        setSegments(data.segments || []); // Store segments
-        if (user) {
-          addToHistory(file.name, data.transcription);
-        }
-        return '¡Transcripción completada con éxito!';
-      },
-      error: (err) => {
-        console.error(err);
-        return `Error: ${err.message}`;
-      },
-    }).finally(() => {
+    try {
+      const data = await uploadPromise();
+
+      setTranscription(data.transcription);
+      setSegments(data.segments || []); // Store segments
+
+      if (user) {
+        await addToHistory(file.name, data.transcription);
+      }
+
+      toast.success('¡Transcripción completada con éxito!');
+    } catch (err) {
+      console.error(err);
+      toast.error(err instanceof Error ? `Error: ${err.message}` : 'Ocurrió un error desconocido');
+    } finally {
       setIsUploading(false);
-    });
+    }
   };
 
   const handleHistorySelect = (text: string, fname: string) => {
