@@ -4,7 +4,6 @@ import AudioUploader from './components/AudioUploader';
 import TranscriptionViewer from './components/TranscriptionViewer';
 import { Layout } from './components/Layout/Layout';
 import { useHistory } from './hooks/useHistory';
-import { DashboardStats } from './components/Dashboard/Stats';
 import HistoryList from './components/HistoryList';
 import { auth } from './firebase';
 import { onAuthStateChanged, type User, signOut, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
@@ -160,7 +159,7 @@ function App() {
           </div>
         </div>
 
-        <DashboardStats />
+        {/* <DashboardStats /> */}
 
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-1 transition-colors duration-200 animate-slide-up">
           <AudioUploader onUpload={handleUpload} isUploading={isUploading} />
