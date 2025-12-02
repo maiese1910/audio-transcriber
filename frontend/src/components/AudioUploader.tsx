@@ -57,7 +57,8 @@ const AudioUploader: React.FC<AudioUploaderProps> = ({ onUpload, isUploading }) 
           <div className="flex flex-col items-center justify-center py-8 space-y-6">
             {/* Loading Spinner */}
             <div className="relative">
-              <div className="w-16 h-16 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin"></div>
+              <div className="w-16 h-16 border-4 border-indigo-200 dark:border-indigo-800 border-t-indigo-600 dark:border-t-indigo-400 rounded-full animate-spin shadow-lg shadow-indigo-500/50"></div>
+              <div className="absolute inset-0 w-16 h-16 rounded-full bg-indigo-500/20 animate-pulse"></div>
             </div>
 
             <div className="space-y-2">

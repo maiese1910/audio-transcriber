@@ -114,25 +114,41 @@ function App() {
 
   return (
     <Layout user={user} onLogin={handleLogin} onLogout={handleSignOut}>
-      <Toaster position="top-center" toastOptions={{
-        className: 'dark:bg-gray-800 dark:text-white',
-        style: {
-          background: '#333',
-          color: '#fff',
-        },
-        success: {
+      <Toaster
+        position="top-center"
+        toastOptions={{
+          duration: 4000,
           style: {
-            background: '#10B981',
+            borderRadius: '12px',
+            padding: '16px',
+            fontSize: '15px',
+            fontWeight: '500',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
           },
-        },
-        error: {
-          style: {
-            background: '#EF4444',
+          success: {
+            iconTheme: {
+              primary: '#10B981',
+              secondary: 'white',
+            },
+            style: {
+              background: '#10B981',
+              color: 'white',
+            },
           },
-        },
-      }} />
+          error: {
+            iconTheme: {
+              primary: '#EF4444',
+              secondary: 'white',
+            },
+            style: {
+              background: '#EF4444',
+              color: 'white',
+            },
+          },
+        }}
+      />
 
-      <div className="space-y-8">
+      <div className="space-y-8 animate-fade-in">
         <div className="flex justify-between items-center">
           <div className="text-center sm:text-left">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
@@ -146,7 +162,7 @@ function App() {
 
         <DashboardStats />
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-1 transition-colors duration-200">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-1 transition-colors duration-200 animate-slide-up">
           <AudioUploader onUpload={handleUpload} isUploading={isUploading} />
         </div>
 
