@@ -161,9 +161,11 @@ function App() {
 
         {/* <DashboardStats /> */}
 
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-1 transition-colors duration-200 animate-slide-up">
-          <AudioUploader onUpload={handleUpload} isUploading={isUploading} />
-        </div>
+        {!transcription && (
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm p-1 transition-colors duration-200 animate-slide-up">
+            <AudioUploader onUpload={handleUpload} isUploading={isUploading} />
+          </div>
+        )}
 
         {transcription && (
           <TranscriptionViewer
