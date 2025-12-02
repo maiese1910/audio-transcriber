@@ -15,7 +15,7 @@ export const Layout: React.FC<LayoutProps> = ({ children, user, onLogin, onLogou
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex transition-colors duration-200">
-            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+            <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} userId={user?.uid} />
 
             <div className="flex-1 flex flex-col lg:pl-64 transition-all duration-300">
                 <Header

@@ -5,10 +5,11 @@ import { SettingsModal } from '../SettingsModal';
 interface SidebarProps {
     isOpen: boolean;
     onClose: () => void;
+    userId?: string;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-    const { history, loading } = useHistory();
+export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, userId }) => {
+    const { history, loading } = useHistory(userId);
     const [showSettings, setShowSettings] = useState(false);
 
     return (
