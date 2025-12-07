@@ -50,6 +50,9 @@ async def transcribe_audio(
     file: UploadFile = File(...),
     hf_token: Optional[str] = Form(None)
 ):
+    # Use provided token or fallback to server-side environment variable
+    hf_token = hf_token or os.environ.get("HF_TOKEN")
+
     if not model:
         raise HTTPException(status_code=503, detail="Model not loaded yet")
 
