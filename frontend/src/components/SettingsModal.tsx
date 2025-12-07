@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTheme } from '../context/ThemeContext';
 import { toast } from 'react-hot-toast';
 
@@ -9,6 +9,17 @@ interface SettingsModalProps {
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     const { theme, toggleTheme } = useTheme();
+    const [hfToken, setHfToken] = useState('');
+
+    useEffect(() => {
+        const token = localStorage.getItem('hf_token');
+        if (token) setHfToken(token);
+    }, [isOpen]);
+
+    const handleSaveToken = () => {
+        localStorage.setItem('hf_token', hfToken);
+        toast.success('Token guardado correctamente');
+    };
 
     if (!isOpen) return null;
 
@@ -97,6 +108,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                                 <span>Idioma:</span>
                                 <span className="font-medium">Español</span>
                             </div>
+                        </div>
+                    </div>
+
+                    {/* Hugging Face Token */}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-700/50 rounded-xl">
+                        <div className="flex items-center gap-3 mb-3">
+                            <div className="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
+                                <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <p className="font-medium text-gray-900 dark:text-white">Token de Hugging Face</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">Necesario para detectar oradores</p>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <input
+                                type="password"
+                                value={hfToken}
+                                onChange={(e) => setHfToken(e.target.value)}
+                                placeholder="hf_..."
+                                className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                            />
+                            <button
+                                onClick={handleSaveToken}
+                                className="w-full px-3 py-1.5 text-xs font-medium text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/40 transition-colors"
+                            >
+                                Guardar Token
+                            </button>
+                            <p className="text-xs text-gray-400">
+                                <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noopener noreferrer" className="underline hover:text-indigo-500">
+                                    Obtener token aquí
+                                </a> (Requiere acceso a pyannote/speaker-diarization-3.1)
+                            </p>
                         </div>
                     </div>
 

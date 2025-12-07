@@ -7,3 +7,7 @@ python-multipart
 # though we want to minimize image size. Let's keep it minimal.
 # pydub
 numpy
+torch
+torchaudio
+pyannote.audio
+python-dotenv

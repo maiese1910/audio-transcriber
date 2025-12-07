@@ -1,19 +1,58 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { toast } from 'react-hot-toast';
 
 interface Segment {
     start: number;
     end: number;
     text: string;
+    speaker?: string;
 }
 
 interface TranscriptionViewerProps {
     text: string;
     filename: string;
     segments?: Segment[];
+    speakerCount?: number;
 }
 
-const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filename, segments }) => {
+const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filename, segments, speakerCount }) => {
+    const [customFilename, setCustomFilename] = useState(filename.replace(/\.[^/.]+$/, ''));
+
+    const hasSpeakers = segments && segments.length > 0 && segments[0].speaker;
+
+    const groupedSegments = useMemo(() => {
+        if (!segments || segments.length === 0) return [];
+
+        const groups = [];
+        let currentGroup = {
+            speaker: segments[0].speaker || 'Unknown',
+            text: segments[0].text,
+            start: segments[0].start,
+            end: segments[0].end
+        };
+
+        for (let i = 1; i < segments.length; i++) {
+            const seg = segments[i];
+            const speaker = seg.speaker || 'Unknown';
+
+            // If same speaker and gap is small (< 2s), merge
+            // Otherwise new paragraph
+            if (speaker === currentGroup.speaker) {
+                currentGroup.text += " " + seg.text;
+                currentGroup.end = seg.end;
+            } else {
+                groups.push(currentGroup);
+                currentGroup = {
+                    speaker: speaker,
+                    text: seg.text,
+                    start: seg.start,
+                    end: seg.end
+                };
+            }
+        }
+        groups.push(currentGroup);
+        return groups;
+    }, [segments]);
     const handleCopy = () => {
         navigator.clipboard.writeText(text);
         toast.success('Texto copiado al portapapeles');
@@ -38,7 +77,7 @@ const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filenam
         const url = URL.createObjectURL(blob);
         const element = document.createElement("a");
         element.href = url;
-        element.download = `${filename.replace(/\.[^/.]+$/, '')}_transcription.doc`;
+        element.download = `${customFilename}_transcription.doc`;
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
@@ -51,7 +90,7 @@ const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filenam
         const url = URL.createObjectURL(blob);
         const element = document.createElement("a");
         element.href = url;
-        element.download = `${filename.replace(/\.[^/.]+$/, '')}_transcription.txt`;
+        element.download = `${customFilename}.txt`;
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
@@ -86,7 +125,7 @@ const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filenam
         const url = URL.createObjectURL(blob);
         const element = document.createElement("a");
         element.href = url;
-        element.download = `${filename.replace(/\.[^/.]+$/, '')}.srt`;
+        element.download = `${customFilename}.srt`;
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
@@ -98,6 +137,18 @@ const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filenam
         <div className="mt-8 bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden transition-colors duration-200">
             <div className="flex flex-col sm:flex-row items-center justify-between px-8 py-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm gap-4">
                 <div className="flex items-center gap-3 w-full sm:w-auto">
+                    <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <input
+                        type="text"
+                        value={customFilename}
+                        onChange={(e) => setCustomFilename(e.target.value)}
+                        className="text-lg font-semibold text-gray-900 dark:text-white bg-transparent border-b-2 border-transparent hover:border-indigo-300 dark:hover:border-indigo-600 focus:border-indigo-600 dark:focus:border-indigo-400 outline-none transition-colors px-2 py-1 min-w-[200px]"
+                        placeholder="Nombre del archivo"
+                    />
+                </div>
+                <div className="flex items-center gap-3 w-full sm:w-auto">
                     <div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg">
                         <svg className="w-5 h-5 text-indigo-600 dark:text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -106,6 +157,11 @@ const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filenam
                     <div>
                         <h3 className="font-bold text-gray-800 dark:text-white">Resultado</h3>
                         <p className="text-xs text-gray-500 dark:text-gray-400 font-medium truncate max-w-[200px]">{filename}</p>
+                        {speakerCount !== undefined && speakerCount > 0 && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 mt-1">
+                                {speakerCount} Oradores
+                            </span>
+                        )}
                     </div>
                 </div>
 
@@ -151,9 +207,29 @@ const TranscriptionViewer: React.FC<TranscriptionViewerProps> = ({ text, filenam
             </div>
             <div className="p-8 bg-white dark:bg-gray-800">
                 <div className="prose max-w-none">
-                    <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-200 leading-loose text-lg font-light">
-                        {text}
-                    </p>
+                    {hasSpeakers ? (
+                        <div className="space-y-6">
+                            {groupedSegments.map((group, idx) => (
+                                <div key={idx} className="bg-gray-50 dark:bg-gray-700/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <span className="text-xs font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded">
+                                            {group.speaker}
+                                        </span>
+                                        <span className="text-xs text-gray-400 font-mono">
+                                            {formatTime(group.start)} - {formatTime(group.end)}
+                                        </span>
+                                    </div>
+                                    <p className="text-gray-700 dark:text-gray-200 leading-relaxed">
+                                        {group.text}
+                                    </p>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p className="whitespace-pre-wrap text-gray-700 dark:text-gray-200 leading-loose text-lg font-light">
+                            {text}
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

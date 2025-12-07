@@ -14,6 +14,7 @@ function App() {
   const [isUploading, setIsUploading] = useState(false);
   const [transcription, setTranscription] = useState<string | null>(null);
   const [segments, setSegments] = useState<any[]>([]); // Store segments for SRT export
+  const [speakerCount, setSpeakerCount] = useState<number>(0);
   const [filename, setFilename] = useState<string>("");
 
   // Pass userId to useHistory hook
@@ -31,10 +32,16 @@ function App() {
     setIsUploading(true);
     setTranscription(null);
     setSegments([]);
+    setSpeakerCount(0);
     setFilename(file.name);
 
     const formData = new FormData();
     formData.append('file', file);
+
+    const token = localStorage.getItem('hf_token');
+    if (token) {
+      formData.append('hf_token', token);
+    }
 
     const uploadPromise = async () => {
       // Use local backend for better performance and no timeouts
@@ -61,6 +68,7 @@ function App() {
 
       setTranscription(data.transcription);
       setSegments(data.segments || []); // Store segments
+      setSpeakerCount(data.speaker_count || 0);
 
       if (user) {
         await addToHistory(file.name, data.transcription);
@@ -172,6 +180,7 @@ function App() {
             text={transcription}
             filename={filename}
             segments={segments}
+            speakerCount={speakerCount}
           />
         )}
 
